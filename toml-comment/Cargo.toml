@@ -1,0 +1,14 @@
+[package]
+name = "toml-comment"
+description = "Derive macro that turns doc comments and Default values into commented TOML"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme = "../README.md"
+
+[dependencies]
+toml-comment-derive = { path = "../toml-comment-derive", version = "=0.1.0" }
+toml = "0.8"
+serde = { version = "1", features = ["derive"] }
