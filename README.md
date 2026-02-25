@@ -18,7 +18,7 @@ The goal of this crate is to stay as small as possible. It reads your doc commen
 
 ```toml
 [dependencies]
-toml-comment = "0.1"
+toml-comment = "0.2"
 serde = { version = "1", features = ["derive"] }
 ```
 
@@ -60,6 +60,8 @@ Nested structs become `[section]` headers automatically. `to_commented_toml()` s
 - `String`
 - `Option<T>` -- omitted when `None`
 - `Vec<T>` -- inline arrays
+- Enums -- use `#[toml_comment(inline)]` on the field (the enum itself just needs `Serialize`)
+- `HashMap<String, T>` / `BTreeMap<String, T>` -- leaf values become flat `key = value` pairs, struct values become inline tables
 - Nested structs -- become `[section]` tables, must also derive `TomlComment`
 - `#[toml_comment(inline)]` forces a struct field to serialize as an inline value
 

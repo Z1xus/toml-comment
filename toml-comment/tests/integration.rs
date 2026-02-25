@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::collections::{BTreeMap, HashMap};
 use toml_comment::TomlComment;
 
 /// Application settings
@@ -271,4 +272,196 @@ fn float_formatting() {
     let toml = Thresholds::default_toml();
     assert!(toml.contains("temperature = 1.0"));
     assert!(toml.contains("ratio = 0.75"));
+}
+
+// --- Enum support ---
+
+#[derive(Serialize)]
+enum LogLevel {
+    Debug,
+    Info,
+    Warn,
+}
+
+#[derive(Serialize, TomlComment)]
+struct WithEnum {
+    /// The log level
+    #[toml_comment(inline)]
+    level: LogLevel,
+    /// App name
+    name: String,
+}
+
+impl Default for WithEnum {
+    fn default() -> Self {
+        Self {
+            level: LogLevel::Info,
+            name: "app".to_string(),
+        }
+    }
+}
+
+#[test]
+fn enum_field_inline() {
+    let toml = WithEnum::default_toml();
+    let expected = "\
+# The log level
+level = \"Info\"
+# App name
+name = \"app\"
+";
+    assert_eq!(toml, expected);
+}
+
+#[derive(Serialize, TomlComment)]
+struct WithOptionalEnum {
+    level: Option<LogLevel>,
+}
+
+impl Default for WithOptionalEnum {
+    fn default() -> Self {
+        Self { level: None }
+    }
+}
+
+#[test]
+fn option_enum_none() {
+    let toml = WithOptionalEnum::default_toml();
+    assert_eq!(toml, "");
+}
+
+#[test]
+fn option_enum_some() {
+    let cfg = WithOptionalEnum {
+        level: Some(LogLevel::Warn),
+    };
+    let toml = cfg.to_commented_toml();
+    assert_eq!(toml, "level = \"Warn\"\n");
+}
+
+// --- Map support ---
+
+#[derive(Serialize, TomlComment)]
+struct WithHashMap {
+    /// Environment variables
+    env: HashMap<String, String>,
+}
+
+impl Default for WithHashMap {
+    fn default() -> Self {
+        let mut env = HashMap::new();
+        env.insert("KEY".to_string(), "value".to_string());
+        Self { env }
+    }
+}
+
+#[test]
+fn hashmap_leaf_values() {
+    let toml = WithHashMap::default_toml();
+    let expected = "\
+# Environment variables
+KEY = \"value\"
+";
+    assert_eq!(toml, expected);
+}
+
+#[derive(Serialize, TomlComment)]
+struct WithBTreeMap {
+    /// Sorted settings
+    settings: BTreeMap<String, String>,
+}
+
+impl Default for WithBTreeMap {
+    fn default() -> Self {
+        let mut settings = BTreeMap::new();
+        settings.insert("alpha".to_string(), "first".to_string());
+        settings.insert("beta".to_string(), "second".to_string());
+        Self { settings }
+    }
+}
+
+#[test]
+fn btreemap_deterministic_order() {
+    let toml = WithBTreeMap::default_toml();
+    let expected = "\
+# Sorted settings
+alpha = \"first\"
+beta = \"second\"
+";
+    assert_eq!(toml, expected);
+}
+
+#[derive(Serialize, TomlComment)]
+struct WithStructMap {
+    entries: HashMap<String, ServerConfig>,
+}
+
+impl Default for WithStructMap {
+    fn default() -> Self {
+        let mut entries = HashMap::new();
+        entries.insert(
+            "main".to_string(),
+            ServerConfig {
+                port: 3000,
+                host: "0.0.0.0".to_string(),
+            },
+        );
+        Self { entries }
+    }
+}
+
+#[test]
+fn hashmap_struct_values() {
+    let toml = WithStructMap::default_toml();
+    assert!(toml.contains("main = {"));
+    assert!(toml.contains("port = 3000"));
+    assert!(toml.contains("host = \"0.0.0.0\""));
+}
+
+#[derive(Serialize, TomlComment)]
+struct WithEmptyMap {
+    /// Tags for the resource
+    tags: BTreeMap<String, String>,
+}
+
+impl Default for WithEmptyMap {
+    fn default() -> Self {
+        Self {
+            tags: BTreeMap::new(),
+        }
+    }
+}
+
+#[test]
+fn empty_map_no_output() {
+    let toml = WithEmptyMap::default_toml();
+    assert_eq!(toml, "");
+}
+
+#[derive(Serialize, TomlComment)]
+struct EnumAndMap {
+    #[toml_comment(inline)]
+    mode: LogLevel,
+    labels: BTreeMap<String, String>,
+}
+
+impl Default for EnumAndMap {
+    fn default() -> Self {
+        let mut labels = BTreeMap::new();
+        labels.insert("env".to_string(), "prod".to_string());
+        Self {
+            mode: LogLevel::Debug,
+            labels,
+        }
+    }
+}
+
+#[test]
+fn enum_and_map_combined() {
+    let toml = EnumAndMap::default_toml();
+    let expected = "\
+mode = \"Debug\"
+env = \"prod\"
+";
+    assert_eq!(toml, expected);
 }

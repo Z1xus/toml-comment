@@ -26,7 +26,7 @@ pub fn derive_toml_comment(input: TokenStream) -> TokenStream {
     let name = &input.ident;
 
     let Data::Struct(data) = &input.data else {
-        panic!("TomlComment only supports structs");
+        return TokenStream::new();
     };
     let Fields::Named(named) = &data.fields else {
         panic!("TomlComment only supports structs with named fields");
@@ -48,7 +48,20 @@ pub fn derive_toml_comment(input: TokenStream) -> TokenStream {
         let field_docs = extract_docs(&field.attrs);
         let force_inline = has_toml_comment_attr(&field.attrs, "inline");
 
-        if !force_inline && is_section_type(&field.ty) {
+        if !force_inline && is_map_type(&field.ty) {
+            let doc_tokens = emit_docs(&field_docs);
+            render_body.push(quote! {
+                let map_val = toml::Value::try_from(&self.#field_name).unwrap();
+                if let toml::Value::Table(table) = map_val {
+                    if !table.is_empty() {
+                        #(#doc_tokens)*
+                        for (k, v) in &table {
+                            out.push_str(&format!("{} = {}\n", k, toml_comment::fmt_value(v)));
+                        }
+                    }
+                }
+            });
+        } else if !force_inline && is_section_type(&field.ty) {
             let emit_blank = !first_section || !struct_docs.is_empty();
             first_section = false;
 
@@ -160,4 +173,14 @@ fn is_option_type(ty: &Type) -> bool {
         return false;
     };
     seg.ident == "Option"
+}
+
+fn is_map_type(ty: &Type) -> bool {
+    let Type::Path(type_path) = ty else {
+        return false;
+    };
+    let Some(seg) = type_path.path.segments.last() else {
+        return false;
+    };
+    seg.ident == "HashMap" || seg.ident == "BTreeMap"
 }

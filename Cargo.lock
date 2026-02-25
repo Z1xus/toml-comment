@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "toml-comment"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "toml",
@@ -121,7 +121,7 @@ dependencies = [
 
 [[package]]
 name = "toml-comment-derive"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "proc-macro2",
  "quote",

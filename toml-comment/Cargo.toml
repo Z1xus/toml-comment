@@ -7,8 +7,9 @@ authors.workspace = true
 license.workspace = true
 repository.workspace = true
 readme = "../README.md"
+keywords = ["toml", "comments", "config", "derive", "serde"]
 
 [dependencies]
-toml-comment-derive = { path = "../toml-comment-derive", version = "=0.1.0" }
+toml-comment-derive = { path = "../toml-comment-derive", version = "=0.2.0" }
 toml = "0.8"
 serde = { version = "1", features = ["derive"] }
