@@ -12,6 +12,6 @@ keywords = ["toml", "comments", "config", "derive", "serde"]
 proc-macro = true
 
 [dependencies]
-syn = { version = "2", features = ["full"] }
+syn = { version = "2", features = ["derive", "parsing", "proc-macro"] }
 quote = "1"
 proc-macro2 = "1"
