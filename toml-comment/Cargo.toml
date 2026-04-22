@@ -11,6 +11,6 @@ exclude = ["tests/"]
 keywords = ["toml", "comments", "config", "derive", "serde"]
 
 [dependencies]
-toml-comment-derive = { path = "../toml-comment-derive", version = "=0.2.0" }
-toml = "0.8"
+toml-comment-derive = { path = "../toml-comment-derive", version = "=0.3.0" }
+toml = "1.1.2"
 serde = { version = "1", features = ["derive"] }
